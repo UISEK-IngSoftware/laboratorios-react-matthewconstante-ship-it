@@ -1,76 +1,107 @@
-import { Typography, Box, TextField, Button } from "@mui/material"; 
-import { useState } from "react";
+import { Box, Button, TextField, Typography, Alert, MenuItem } from '@mui/material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { addPokemon } from '../services/pokemonService';
+
 
 export default function PokemonForm() {
-  const [nombre, setNombre] = useState("");
-  const [tipo, setTipo] = useState("");
-  const [peso, setPeso] = useState("");
-  const [altura, setAltura] = useState("");
-  const [picture, setPicture] = useState(null);
+    const navigate = useNavigate();
+    const [errorMsg, setErrorMsg] = useState("");
+    const [pokemonData, setPokemonData] = useState({
+        name: "",
+        type: "",
+        weight: "",
+        height: "",
+        picture: null,
+    });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Datos listos para enviar:", { nombre, tipo, peso, altura, picture });
-  };
+    const handleChange = (e) => {
+        const { name, value, files } = e.target;
+        if (name === 'picture') {
+            setPokemonData({ ...pokemonData, picture: files[0] });
+        } else {
+            setPokemonData({ ...pokemonData, [name]: value });
+        }
+    };
 
-  return (
-    <>
-      <Typography variant="h4" gutterBottom sx={{ mt: 2 }}>
-        Formulario de Pokémon
-      </Typography>
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setErrorMsg("");
+        addPokemon(pokemonData).then(() => {
+            alert('Pokemon agregado exitosamente');
+            navigate("/");
+        }).catch((error) => {
+            console.error('Error al agregar el pokemon:', error);
+            setErrorMsg('Error al agregar el pokemon. Por favor, inténtelo de nuevo más tarde.');
+        });
+    };
 
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-          maxWidth: 400,
-          mt: 2
-        }}
-      >
-        <TextField
-          label="Nombre"
-          variant="outlined"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          fullWidth
-        />
-        <TextField
-          label="Tipo"
-          variant="outlined"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          fullWidth
-        />
-        <TextField
-          label="Peso"
-          variant="outlined"
-          type="number"
-          value={peso}
-          onChange={(e) => setPeso(e.target.value)}
-          fullWidth
-        />
-        <TextField
-          label="Altura"
-          variant="outlined"
-          type="number"
-          value={altura}
-          onChange={(e) => setAltura(e.target.value)}
-          fullWidth
-        />
-        <input 
-          type="file" 
-          name="picture" 
-          accept="image/*" 
-          onChange={(e) => setPicture(e.target.files[0])}
-          style={{ marginTop: '8px', marginBottom: '8px' }}
-        />
-        <Button variant="contained" color="primary" type="submit" size="large">
-          Guardar
-        </Button>
-      </Box>
-    </>
-  );
+    return (
+        <>
+            <Typography variant="h4" gutterBottom>
+                Formulario de Pokemon
+            </Typography>
+            <Box
+                component="form"
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}
+                onSubmit={handleSubmit}
+            >
+                <TextField
+                    label="Nombre"
+                    variant="outlined"
+                    name="name"
+                    value={pokemonData.name}
+                    onChange={handleChange}
+                    required
+                />
+                <TextField
+                    select
+                    label="Tipo"
+                    variant="outlined"
+                    name="type"
+                    value={pokemonData.type}
+                    onChange={handleChange}
+                    required
+                >
+                    <MenuItem value="A">Agua</MenuItem>
+                    <MenuItem value="F">Fuego</MenuItem>
+                    <MenuItem value="T">Tierra</MenuItem>
+                    <MenuItem value="P">Planta</MenuItem>
+                    <MenuItem value="E">Eléctrico</MenuItem>
+                    <MenuItem value="L">Lucha</MenuItem>
+                </TextField>
+
+                <TextField
+                    label="Peso"
+                    variant="outlined"
+                    type="number"
+                    name="weight"
+                    value={pokemonData.weight}
+                    onChange={handleChange}
+                />
+                <TextField
+                    label="Altura"
+                    variant="outlined"
+                    type="number"
+                    name="height"
+                    value={pokemonData.height}
+                    onChange={handleChange}
+                />
+                <input type="file" name="picture" accept="image/*" onChange={handleChange} required />
+
+                {errorMsg && (
+                    <Alert severity="error">
+                        {errorMsg}
+                    </Alert>
+                )}
+                <Button variant="contained" color="primary" type="submit">
+                    Guardar
+                </Button>
+            </Box>
+        </>
+    );
 }
