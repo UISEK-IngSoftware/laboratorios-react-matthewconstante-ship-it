@@ -1,0 +1,8 @@
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh; /* Cambiado de 100px a 100vh para que ocupe toda la altura de la ventana */
+    width: 100%; /* Cambiado de 100px a 100% para que ocupe toda la altura del contenedor */
+    background-color: rgba(24, 157, 251, 0.8); /* Fondo blanco con opacidad */
+}

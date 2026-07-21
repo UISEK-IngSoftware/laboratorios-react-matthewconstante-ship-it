@@ -1,11 +1,12 @@
-import { Box, Button, TextField, Typography, Alert, MenuItem } from '@mui/material';
+import { Box, Button, TextField, Typography, Alert, MenuItem, Snackbar } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addPokemon } from '../services/pokemonService';
 
-
 export default function PokemonForm() {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
     const [pokemonData, setPokemonData] = useState({
         name: "",
@@ -26,21 +27,31 @@ export default function PokemonForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         setErrorMsg("");
-        addPokemon(pokemonData).then(() => {
-            alert('Pokemon agregado exitosamente');
-            navigate("/");
-        }).catch((error) => {
-            console.error('Error al agregar el pokemon:', error);
-            setErrorMsg('Error al agregar el pokemon. Por favor, inténtelo de nuevo más tarde.');
-        });
+
+        try {
+            await addPokemon(pokemonData);
+            setIsSuccess(true);
+            
+            // Damos un pequeño retraso para que el usuario pueda ver el Snackbar antes de redirigir
+            setTimeout(() => {
+                navigate("/");
+            }, 1000);
+        } catch (error) {
+            console.error('Error al agregar el pokémon:', error);
+            setErrorMsg('Error al agregar el pokémon. Por favor, inténtelo de nuevo más tarde.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <>
-            <Typography variant="h4" gutterBottom>
-                Formulario de Pokemon
+        <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4, p: 2 }}>
+            <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+                Formulario de Pokémon
             </Typography>
+            
             <Box
                 component="form"
                 sx={{
@@ -58,6 +69,7 @@ export default function PokemonForm() {
                     onChange={handleChange}
                     required
                 />
+                
                 <TextField
                     select
                     label="Tipo"
@@ -83,6 +95,7 @@ export default function PokemonForm() {
                     value={pokemonData.weight}
                     onChange={handleChange}
                 />
+                
                 <TextField
                     label="Altura"
                     variant="outlined"
@@ -91,6 +104,10 @@ export default function PokemonForm() {
                     value={pokemonData.height}
                     onChange={handleChange}
                 />
+
+                <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                    Imagen del Pokémon:
+                </Typography>
                 <input type="file" name="picture" accept="image/*" onChange={handleChange} required />
 
                 {errorMsg && (
@@ -98,10 +115,25 @@ export default function PokemonForm() {
                         {errorMsg}
                     </Alert>
                 )}
-                <Button variant="contained" color="primary" type="submit">
-                    Guardar
+                
+                <Button 
+                    variant="contained" 
+                    color="primary" 
+                    type="submit"
+                    disabled={loading}
+                    sx={{ padding: "10px", fontWeight: "bold" }}
+                >
+                    {loading ? 'Guardando...' : 'Guardar'}
                 </Button>
             </Box>
-        </>
+
+            {/* El Snackbar ahora vive dentro del Box principal */}
+            <Snackbar
+                open={isSuccess}
+                autoHideDuration={6000}
+                onClose={() => setIsSuccess(false)}
+                message="Pokémon agregado exitosamente"
+            />
+        </Box>
     );
 }
